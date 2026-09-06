@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Tirzepatide Dose Converter</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --blue-soft: #eff6ff;
+      --amber: #92400e;
+      --amber-bg: #fffbeb;
+      --amber-border: #fde68a;
+      --red: #b91c1c;
+      --red-bg: #fef2f2;
+      --green: #166534;
+      --green-bg: #f0fdf4;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: min(760px, calc(100% - 28px));
+      margin: 32px auto;
+    }
+
+    .header {
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.75rem, 5vw, 2.4rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 4px;
+      font-size: 1.05rem;
+    }
+
+    .section-help {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .mode-btn {
+      min-height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      color: var(--blue-dark);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 11px 70px 11px 12px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .unit {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    button.primary,
+    button.secondary {
+      min-height: 46px;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border: 1px solid var(--blue);
+      background: var(--blue);
+      color: white;
+    }
+
+    button.primary:hover {
+      background: var(--blue-dark);
+    }
+
+    button.secondary {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+    }
+
+    .result-card {
+      display: none;
+    }
+
+    .result-card.show {
+      display: block;
+    }
+
+    .result-main {
+      border-radius: 16px;
+      background: var(--green-bg);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .result-label {
+      color: var(--green);
+      font-weight: 800;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .result-number {
+      margin: 4px 0 2px;
+      font-size: clamp(2.4rem, 10vw, 4rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .result-unit {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .result-details {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .detail {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px;
+    }
+
+    .detail .k {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 2px;
+    }
+
+    .detail .v {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .formula {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.86rem;
+    }
+
+    .notice {
+      border: 1px solid var(--amber-border);
+      background: var(--amber-bg);
+      color: var(--amber);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 0.9rem;
+    }
+
+    .notice strong {
+      color: #78350f;
+    }
+
+    .error {
+      display: none;
+      margin-top: 14px;
+      border: 1px solid #fecaca;
+      background: var(--red-bg);
+      color: var(--red);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    .micro-warning {
+      display: none;
+      margin-top: 12px;
+      color: var(--amber);
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.88rem;
+    }
+
+    .micro-warning.show {
+      display: block;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 4px 14px 24px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        width: min(100% - 20px, 760px);
+        margin: 18px auto;
+      }
+
+      .card {
+        padding: 16px;
+        border-radius: 15px;
+      }
+
+      .grid,
+      .result-details {
+        grid-template-columns: 1fr;
+      }
+
+      .mode-tabs {
+        grid-template-columns: 1fr;
+      }
+
+      button.primary,
+      button.secondary {
+        flex: 1 1 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <h1>Tirzepatide Dose Converter</h1>
+      <p class="subtitle">
+        Converts a prescribed dose in mg to volume and U-100 syringe markings.
+      </p>
+    </header>
+
+    <section class="card">
+      <h2 class="section-title">1. Enter the vial concentration</h2>
+      <p class="section-help">Use the numbers printed on your vial label.</p>
+
+      <div class="mode-tabs" role="group" aria-label="Concentration entry mode">
+        <button class="mode-btn active" id="labelModeBtn" type="button">
+          Vial label: total mg + mL
+        </button>
+        <button class="mode-btn" id="directModeBtn" type="button">
+          Direct concentration: mg/mL
+        </button>
+      </div>
+
+      <form id="calculatorForm" novalidate>
+        <div id="labelMode" class="grid">
+          <div class="field">
+            <label for="totalMg">Medication in vial</label>
+            <div class="input-wrap">
+              <input id="totalMg" type="number" min="0.01" step="any" inputmode="decimal" value="45" />
+              <span class="unit">mg</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="totalMl">Vial volume</label>
+            <div class="input-wrap">
+              <input id="totalMl" type="number" min="0.01" step="any" inputmode="decimal" value="2.5" />
+              <span class="unit">mL</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="directMode" class="grid hidden">
+          <div class="field full">
+            <label for="directConcentration">Concentration</label>
+            <div class="input-wrap">
+              <input id="directConcentration" type="number" min="0.01" step="any" inputmode="decimal" value="18" />
+              <span class="unit">mg/mL</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:14px"></div>
+
+        <h2 class="section-title">2. Enter the prescribed dose</h2>
+        <p class="section-help">
+          The calculator converts the dose you enter; it does not choose or recommend a dose.
+        </p>
+
+        <div class="grid">
+          <div class="field full">
+            <label for="doseMg">Desired dose</label>
+            <div class="input-wrap">
+              <input id="doseMg" type="number" min="0.01" max="15" step="any" inputmode="decimal" value="2.5" />
+              <span class="unit">mg</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" type="submit">Calculate</button>
+          <button class="secondary" id="resetBtn" type="button">Reset example</button>
+        </div>
+
+        <div id="errorBox" class="error" role="alert"></div>
+      </form>
+    </section>
+
+    <section id="resultCard" class="card result-card" aria-live="polite">
+      <div class="result-main">
+        <div class="result-label">U-100 syringe marking</div>
+        <div class="result-number" id="unitsResult">—</div>
+        <div class="result-unit">units</div>
+      </div>
+
+      <div class="result-details">
+        <div class="detail">
+          <div class="k">Concentration</div>
+          <div class="v" id="concentrationResult">—</div>
+        </div>
+
+        <div class="detail">
+          <div class="k">Liquid volume</div>
+          <div class="v" id="volumeResult">—</div>
+        </div>
+      </div>
+
+      <div class="formula" id="formulaText"></div>
+
+      <div id="capacityWarning" class="micro-warning"></div>
+      <div id="roundingWarning" class="micro-warning">
+        <strong>Do not automatically round this number.</strong>
+        If your syringe cannot measure the displayed marking exactly, confirm the appropriate
+        measurable volume with your prescriber or pharmacist.
+      </div>
+    </section>
+
+    <section class="notice">
+      <strong>Safety note:</strong>
+      Verify the exact concentration on the vial every time. Different tirzepatide products and
+      compounded preparations can have different concentrations. This tool is only a unit/volume
+      converter and is not a dosing recommendation. Use only the dose prescribed or specifically
+      confirmed for you by a licensed clinician or pharmacist.
+    </section>
+
+    <p class="footer">
+      U-100 syringe markings correspond to 100 units per 1 mL. This app stores no medical information
+      and sends no data anywhere.
+    </p>
+  </main>
+
+  <script>
+    (() => {
+      const form = document.getElementById("calculatorForm");
+      const labelModeBtn = document.getElementById("labelModeBtn");
+      const directModeBtn = document.getElementById("directModeBtn");
+      const labelMode = document.getElementById("labelMode");
+      const directMode = document.getElementById("directMode");
+
+      const totalMg = document.getElementById("totalMg");
+      const totalMl = document.getElementById("totalMl");
+      const directConcentration = document.getElementById("directConcentration");
+      const doseMg = document.getElementById("doseMg");
+
+      const resultCard = document.getElementById("resultCard");
+      const unitsResult = document.getElementById("unitsResult");
+      const concentrationResult = document.getElementById("concentrationResult");
+      const volumeResult = document.getElementById("volumeResult");
+      const formulaText = document.getElementById("formulaText");
+      const errorBox = document.getElementById("errorBox");
+      const capacityWarning = document.getElementById("capacityWarning");
+      const roundingWarning = document.getElementById("roundingWarning");
+      const resetBtn = document.getElementById("resetBtn");
+
+      let mode = "label";
+
+      function setMode(nextMode) {
+        mode = nextMode;
+        const isLabel = mode === "label";
+
+        labelMode.classList.toggle("hidden", !isLabel);
+        directMode.classList.toggle("hidden", isLabel);
+
+        labelModeBtn.classList.toggle("active", isLabel);
+        directModeBtn.classList.toggle("active", !isLabel);
+
+        errorBox.classList.remove("show");
+        resultCard.classList.remove("show");
+      }
+
+      function cleanNumber(value, maxDecimals = 4) {
+        return Number(value.toFixed(maxDecimals)).toString();
+      }
+
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.add("show");
+        resultCard.classList.remove("show");
+      }
+
+      function calculate() {
+        errorBox.classList.remove("show");
+        capacityWarning.classList.remove("show");
+        roundingWarning.classList.remove("show");
+
+        const dose = Number(doseMg.value);
+
+        if (!Number.isFinite(dose) || dose <= 0) {
+          showError("Enter a prescribed dose greater than 0 mg.");
+          return;
+        }
+
+        if (dose > 15) {
+          showError(
+            "This calculator stops above 15 mg because 15 mg once weekly is the current FDA-labeled maximum tirzepatide dose."
+          );
+          return;
+        }
+
+        let concentration;
+
+        if (mode === "label") {
+          const mg = Number(totalMg.value);
+          const ml = Number(totalMl.value);
+
+          if (!Number.isFinite(mg) || mg <= 0 || !Number.isFinite(ml) || ml <= 0) {
+            showError("Enter valid vial-label values greater than 0 for both mg and mL.");
+            return;
+          }
+
+          concentration = mg / ml;
+        } else {
+          concentration = Number(directConcentration.value);
+
+          if (!Number.isFinite(concentration) || concentration <= 0) {
+            showError("Enter a valid concentration greater than 0 mg/mL.");
+            return;
+          }
+        }
+
+        const volumeMl = dose / concentration;
+        const u100Units = volumeMl * 100;
+
+        if (!Number.isFinite(volumeMl) || !Number.isFinite(u100Units)) {
+          showError("The entered values could not be calculated. Check the vial information and try again.");
+          return;
+        }
+
+        unitsResult.textContent = cleanNumber(u100Units, 2);
+        concentrationResult.textContent = `${cleanNumber(concentration, 4)} mg/mL`;
+        volumeResult.textContent = `${cleanNumber(volumeMl, 4)} mL`;
+
+        formulaText.textContent =
+          `Calculation: ${cleanNumber(dose, 4)} mg ÷ ${cleanNumber(concentration, 4)} mg/mL = ` +
+          `${cleanNumber(volumeMl, 4)} mL; ${cleanNumber(volumeMl, 4)} mL × 100 = ` +
+          `${cleanNumber(u100Units, 2)} U-100 units.`;
+
+        if (u100Units > 100) {
+          capacityWarning.textContent =
+            "The calculated volume is more than 1 mL / 100 U-100 units. Do not assume it can be given as a single syringe; verify the product, dose, and administration plan with a clinician or pharmacist.";
+          capacityWarning.classList.add("show");
+        }
+
+        const hundredths = Math.round(u100Units * 100) / 100;
+        const isWhole = Math.abs(hundredths - Math.round(hundredths)) < 0.0001;
+        const isHalf = Math.abs((hundredths * 2) - Math.round(hundredths * 2)) < 0.0001;
+
+        if (!isWhole && !isHalf) {
+          roundingWarning.classList.add("show");
+        }
+
+        resultCard.classList.add("show");
+      }
+
+      labelModeBtn.addEventListener("click", () => setMode("label"));
+      directModeBtn.addEventListener("click", () => setMode("direct"));
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        calculate();
+      });
+
+      resetBtn.addEventListener("click", () => {
+        totalMg.value = "45";
+        totalMl.value = "2.5";
+        directConcentration.value = "18";
+        doseMg.value = "2.5";
+        setMode("label");
+        calculate();
+      });
+
+      calculate();
+    })();
+  </script>
+</body>
+</html>
